@@ -16,8 +16,10 @@ public class PlayerMovement : MonoBehaviour
  
     [SerializeField] private PlayerAnimation playerAnimation;
     [SerializeField] private State state;
+    [SerializeField] private PlayerIK playerIK;
     void Start()
     {
+        Application.targetFrameRate = -1;
         state = State.Idle;
     }
 
@@ -67,6 +69,8 @@ public class PlayerMovement : MonoBehaviour
         actionTimer = 0;
         state = State.Action;
         playerAnimation.PlayAnimation(currentActionZone.GetAnimationToPlay);
+        playerIK.ConfigureIK(currentActionZone.GetIKTarget);
+        ////////////////
     }
     private float actionTimer;
     private void Action()
@@ -74,6 +78,18 @@ public class PlayerMovement : MonoBehaviour
         actionTimer += Time.deltaTime;
         float splinePercent = actionTimer / currentActionZone.GetActionDuration;
         transform.position = currentActionZone.GetPlayerSpline.EvaluatePosition(splinePercent);
+
+        if(splinePercent >= 1)
+        {
+            ExitActionZone();
+        }
     }
 
+    private void ExitActionZone()
+    {
+        state = State.Run;
+        currentActionZone = null;
+        playerAnimation.PlayAnimation("Run", 1);
+        playerIK.DisableIK();
+    }
 }
